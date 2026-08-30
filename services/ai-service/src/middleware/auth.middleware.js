@@ -15,7 +15,7 @@ const verifyJWT = (req, res, next) => {
     const token = authHeader.replace(/^Bearer\s+/, "").trim();
 
     try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey');
+        const decoded = jwt.verify(token, env.JWT_SECRET || process.env.JWT_SECRET);
         req.user = decoded;
 
         next();

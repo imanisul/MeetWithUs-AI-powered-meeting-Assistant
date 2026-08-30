@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { meetingsApi } from "@/services/meetings.api"
 import { aiApi } from "@/services/ai.api"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -18,6 +19,7 @@ export function MeetingDetails() {
   const queryClient = useQueryClient()
   
   const [notes, setNotes] = useState("")
+  const [status, setStatus] = useState("Scheduled")
 
   const { data: meetingData, isLoading } = useQuery({
     queryKey: ['meetings', id],
@@ -31,7 +33,10 @@ export function MeetingDetails() {
     if (m?.notes) {
       setNotes(m.notes)
     }
-  }, [m?.notes])
+    if (m?.status) {
+      setStatus(m.status)
+    }
+  }, [m?.notes, m?.status])
 
   const meeting = {
     title: m?.title || "Untitled Meeting",
@@ -60,6 +65,7 @@ export function MeetingDetails() {
   const handleSave = () => {
     saveMutation.mutate({ 
       notes, 
+      status,
       summary: meeting.aiSummary, 
       actionItems: meeting.aiActionItems 
     })
@@ -111,7 +117,16 @@ export function MeetingDetails() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">{meeting.title}</h1>
-            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">{meeting.status}</Badge>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[140px] bg-background border-border h-8 text-xs font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Scheduled">Scheduled</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-6 mt-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5"><CalendarIcon className="h-4 w-4" /> {meeting.date}</span>

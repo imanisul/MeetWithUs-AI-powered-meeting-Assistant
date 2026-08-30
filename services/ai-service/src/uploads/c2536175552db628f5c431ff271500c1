@@ -1,0 +1,32 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 928 >>
+stream
+BT /F1 10 Tf 50 700 Td (MeetWithUs Quarterly Review Q3 2026. Date August 15 2026. Attendees Sarah Johnson CEO Michael Chen CTO Lisa Park VP Engineering David Williams Product Manager. Revenue grew 15 percent reaching 2.4 million dollars. Enterprise segment grew 25 percent. Customer retention 94 percent. Product Roadmap AI transcription Slack Teams integration Analytics dashboard. Engineering team growing from 12 to 18. Hiring Backend Engineers ML Engineers DevOps Security Engineers. Kubernetes migration 80 percent complete. Database performance improved 40 percent. Cloud costs reduced 12 percent. Budget 50000 dollars approved for infrastructure. Action Items Sarah board presentation September 5 Michael job descriptions August 25 David AI transcription PRD September 1 Lisa interview pipeline August 28 Emily test plan September 10 James Kubernetes migration September 30. Decision approved 50000 dollars budget.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001220 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1290
+%%EOF

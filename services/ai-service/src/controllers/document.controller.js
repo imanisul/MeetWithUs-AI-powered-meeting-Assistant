@@ -26,12 +26,12 @@ export const uploadDocument = async (req,res) => {
 
 export const searchDocuments = async (req, res) => {
     try {
-        const { q } = req.query;
+        const { q, history } = req.body;
         if (!q) {
             return res.status(400).json({ success: false, message: "Search query 'q' is required" });
         }
         
-        const result = await queryVectorStore(q, req.user);
+        const result = await queryVectorStore(q, req.user, history || []);
         
         res.status(200).json({
             success: true,
@@ -43,6 +43,8 @@ export const searchDocuments = async (req, res) => {
         
         if (error.message && error.message.includes("API key not valid")) {
              errorMessage = "Google Gemini API key is invalid or missing. Please check the backend .env configuration.";
+        } else if (error.status === 429 || (error.message && error.message.includes("429 Too Many Requests"))) {
+             errorMessage = "Gemini API rate limit exceeded. Please wait a moment and try again, or check your API quota.";
         } else if (error.message) {
              errorMessage = error.message;
         }
@@ -56,12 +58,17 @@ export const searchDocuments = async (req, res) => {
 
 export const getDocuments = async (req, res) => {
     try {
-        const documents = await Document.find({
-            $or: [
-                { uploadedBy: req.user.id },
-                { "accessList.email": req.user.email }
-            ]
-        }).sort({ createdAt: -1 });
+        let query = {};
+        if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'ORG_ADMIN') {
+            query = {
+                $or: [
+                    { uploadedBy: req.user.id },
+                    { "accessList.email": req.user.email }
+                ]
+            };
+        }
+        
+        const documents = await Document.find(query).sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
             data: documents,
@@ -77,7 +84,12 @@ export const getDocuments = async (req, res) => {
 
 export const deleteDocument = async (req, res) => {
     try {
-        const document = await Document.findOneAndDelete({ _id: req.params.id, uploadedBy: req.user.id });
+        const isGlobalAdmin = req.user.role === 'SUPER_ADMIN' || req.user.role === 'ORG_ADMIN';
+        const query = { _id: req.params.id };
+        if (!isGlobalAdmin) {
+            query.uploadedBy = req.user.id;
+        }
+        const document = await Document.findOneAndDelete(query);
         if (!document) {
             return res.status(404).json({ success: false, message: 'Document not found' });
         }
@@ -105,10 +117,11 @@ export const addAccess = async (req, res) => {
         if (!document) return res.status(404).json({ success: false, message: "Document not found" });
         
         const isOwner = document.uploadedBy === req.user.id;
+        const isGlobalAdmin = req.user.role === 'SUPER_ADMIN' || req.user.role === 'ORG_ADMIN';
         const userAccess = document.accessList.find(a => a.email === req.user.email);
         const isAdminOrCoAdmin = userAccess && (userAccess.role === 'ADMIN' || userAccess.role === 'CO_ADMIN');
         
-        if (!isOwner && !isAdminOrCoAdmin) {
+        if (!isOwner && !isGlobalAdmin && !isAdminOrCoAdmin) {
             return res.status(403).json({ success: false, message: "Not authorized to manage access" });
         }
         
@@ -135,10 +148,11 @@ export const removeAccess = async (req, res) => {
         if (!document) return res.status(404).json({ success: false, message: "Document not found" });
         
         const isOwner = document.uploadedBy === req.user.id;
+        const isGlobalAdmin = req.user.role === 'SUPER_ADMIN' || req.user.role === 'ORG_ADMIN';
         const userAccess = document.accessList.find(a => a.email === req.user.email);
         const isAdminOrCoAdmin = userAccess && (userAccess.role === 'ADMIN' || userAccess.role === 'CO_ADMIN');
         
-        if (!isOwner && !isAdminOrCoAdmin) {
+        if (!isOwner && !isGlobalAdmin && !isAdminOrCoAdmin) {
             return res.status(403).json({ success: false, message: "Not authorized to manage access" });
         }
         

@@ -161,8 +161,8 @@ export function OrganizationSettings() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isInviting}>
-                    {isInviting ? "Inviting..." : "Add to Workspace"}
+                  <Button type="submit" className="w-full" disabled={inviteMutation.isPending}>
+                    {inviteMutation.isPending ? "Inviting..." : "Add to Workspace"}
                   </Button>
                 </form>
               </CardContent>

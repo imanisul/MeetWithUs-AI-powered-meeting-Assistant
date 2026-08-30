@@ -69,9 +69,7 @@ export const updateAIContent  = async (meetingId, aiContent) => {
 };
 
 export const getMeetings = async (user) => {
-    // If ORG_ADMIN, fetch all for org (if we had orgId on meeting). For now, fetch where host or attendees
-    // Since we don't have orgId on meeting model, we just return based on hostId or attendees
-    if (user.role === 'SUPER_ADMIN') {
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ORG_ADMIN') {
         return await Meeting.find().sort({ createdAt: -1 });
     }
     
@@ -80,19 +78,30 @@ export const getMeetings = async (user) => {
     }).sort({ createdAt: -1 });
 };
 
-export const getMeetingById = async (id, userId, role) => {
+export const getMeetingById = async (id, user) => {
     const meeting = await Meeting.findById(id);
     if (!meeting) throw new Error("Meeting not found");
     
-    if (role !== 'SUPER_ADMIN' && role !== 'ORG_ADMIN') {
-        // Attendees are objects, we need to check if the user's email is in there, or we can just check if user.id is the host.
-        // Wait, getMeetingById doesn't receive the user email. Let's change the controller to pass the whole user object or just pass email.
-        // I will change it to check hostId since attendees don't store userId. 
-        if (meeting.hostId.toString() !== userId) {
-            // we'll need to check if any attendee has the user's email.
-            // Since we don't have userEmail here, we can't reliably check attendees unless we change the signature.
-            // For now, I will assume it's fine, or I can update controller to pass user object.
+    if (user.role !== 'SUPER_ADMIN' && user.role !== 'ORG_ADMIN') {
+        const isHost = meeting.hostId.toString() === user.id;
+        const isAttendee = meeting.attendees.some(att => att.email === user.email);
+        
+        if (!isHost && !isAttendee) {
+            throw new Error("You do not have permission to view this meeting");
         }
     }
+    return meeting;
+};
+
+export const updateMeeting = async (id, user, updateData) => {
+    const meeting = await getMeetingById(id, user);
+    
+    // Allow updating notes, summary, actionItems, and status
+    if (updateData.notes !== undefined) meeting.notes = updateData.notes;
+    if (updateData.summary !== undefined) meeting.aiSummary = updateData.summary;
+    if (updateData.actionItems !== undefined) meeting.aiActionItems = updateData.actionItems;
+    if (updateData.status !== undefined) meeting.status = updateData.status;
+
+    await meeting.save();
     return meeting;
 };

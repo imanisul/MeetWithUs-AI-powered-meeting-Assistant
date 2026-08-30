@@ -43,7 +43,7 @@ const Login = () => {
     onSuccess: (data) => {
       dispatch(loginSuccess({ token: data.data.accessToken, user: data.data.user }))
       toast.success("Login successful!")
-      navigate("/dashboard")
+      navigate("/dashboard", { replace: true })
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Login failed")

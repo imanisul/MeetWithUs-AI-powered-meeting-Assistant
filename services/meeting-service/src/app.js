@@ -13,6 +13,7 @@ app.use(helmet());
 app.use(express.json());
 
 app.use('/api/v1/meetings', meetingRoutes);
+app.use('/meetings', meetingRoutes);
 
 app.get('/', (req, res) => {
     res.json({

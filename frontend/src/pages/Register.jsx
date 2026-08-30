@@ -52,7 +52,7 @@ const Register = () => {
     onSuccess: (data) => {
       dispatch(loginSuccess({ token: data.data.accessToken, user: data.data.user }))
       toast.success("Account created successfully!")
-      navigate("/dashboard")
+      navigate("/dashboard", { replace: true })
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Registration failed")

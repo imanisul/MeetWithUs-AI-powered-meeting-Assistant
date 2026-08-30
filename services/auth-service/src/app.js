@@ -33,10 +33,13 @@ app.use(express.json());
 app.use('/api/v1/health', healthRoutes);
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/auth', authRoutes);
 
 app.use('/api/v1/users', userRoutes);
+app.use('/users', userRoutes);
 
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.use(notFoundMiddleware);
 

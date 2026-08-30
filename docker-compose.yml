@@ -102,6 +102,8 @@ services:
       - PORT=8003
       - MONGO_URI=mongodb://mongodb:27017/meetwithus
       - CHROMA_URL=http://chromadb:8000
+      - JWT_SECRET=supersecretjwtkey
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-your_api_key_here}
     networks:
       - meetwithus-network
 

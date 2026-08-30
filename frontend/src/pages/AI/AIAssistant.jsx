@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { Send, Bot, User, Loader2 } from "lucide-react"
+import { Send, Bot, User, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -16,12 +16,26 @@ export function AIAssistant() {
   const [searchParams] = useSearchParams()
   const initialQuery = searchParams.get("q") || ""
   
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi! I'm your AI Meeting Assistant. You can ask me anything about past meetings or uploaded documents." }
-  ])
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem("ai_chat_history")
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {
+        console.error("Failed to parse chat history", e)
+      }
+    }
+    return [
+      { role: "assistant", content: "Hi! I'm your AI Meeting Assistant. You can ask me anything about past meetings or uploaded documents." }
+    ]
+  })
   const [input, setInput] = useState(initialQuery)
   const [isLoading, setIsLoading] = useState(false)
   const hasInitialQueryRun = useRef(false)
+
+  useEffect(() => {
+    localStorage.setItem("ai_chat_history", JSON.stringify(messages))
+  }, [messages])
 
   useEffect(() => {
     if (initialQuery && !hasInitialQueryRun.current) {
@@ -34,12 +48,16 @@ export function AIAssistant() {
     if (!queryText.trim() || isLoading) return
     
     setInput("")
+    // Save current messages in a local variable before updating state to pass to API
+    const currentHistory = [...messages]
+    
     setMessages(prev => [...prev, { role: "user", content: queryText }])
     setIsLoading(true)
 
     try {
-      const res = await api.get(`/ai/search`, {
-        params: { q: queryText }
+      const res = await api.post(`/ai/search`, {
+        q: queryText,
+        history: currentHistory
       })
       
       setMessages(prev => [...prev, { 
@@ -49,8 +67,9 @@ export function AIAssistant() {
       }])
     } catch (error) {
       console.error(error)
-      toast.error("Failed to get response from AI")
-      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I encountered an error searching the documents." }])
+      const errorMsg = error.response?.data?.message || "Failed to get response from AI"
+      toast.error(errorMsg)
+      setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I encountered an error: ${errorMsg}` }])
     } finally {
       setIsLoading(false)
     }
@@ -59,6 +78,13 @@ export function AIAssistant() {
   const handleSend = async (e) => {
     e.preventDefault()
     submitQuery(input)
+  }
+
+  const handleClearChat = () => {
+    const initialMsg = [{ role: "assistant", content: "Hi! I'm your AI Meeting Assistant. You can ask me anything about past meetings or uploaded documents." }]
+    setMessages(initialMsg)
+    localStorage.removeItem("ai_chat_history")
+    toast.success("Chat history cleared")
   }
 
   return (
@@ -71,12 +97,24 @@ export function AIAssistant() {
       </div>
 
       <Card className="flex flex-col flex-1 shadow-lg border-border/50 bg-card/95 backdrop-blur-sm overflow-hidden">
-        <CardHeader className="border-b bg-muted/20">
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
-            MeetWithUs AI
-          </CardTitle>
-          <CardDescription>Powered by Google Gemini & LangChain RAG</CardDescription>
+        <CardHeader className="border-b bg-muted/20 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              MeetWithUs AI
+            </CardTitle>
+            <CardDescription>Powered by Google Gemini & LangChain RAG</CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleClearChat}
+            disabled={isLoading || messages.length <= 1}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear Chat
+          </Button>
         </CardHeader>
         
         <ScrollArea className="flex-1 p-4">

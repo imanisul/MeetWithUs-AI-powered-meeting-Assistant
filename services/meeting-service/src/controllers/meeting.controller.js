@@ -41,9 +41,18 @@ export const getMeetings = async (req, res) => {
 
 export const getMeetingById = async (req, res) => {
     try {
-        const meeting = await meetingService.getMeetingById(req.params.id, req.user.id, req.user.role);
+        const meeting = await meetingService.getMeetingById(req.params.id, req.user);
         res.json({ success: true, data: meeting });
     } catch (error) {
         res.status(404).json({ success: false, message: error.message });
+    }
+};
+
+export const updateMeeting = async (req, res) => {
+    try {
+        const meeting = await meetingService.updateMeeting(req.params.id, req.user, req.body);
+        res.json({ success: true, data: meeting });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
     }
 };

@@ -7,7 +7,12 @@ import asyncHandler from '../utils/asyncHandler.js';
 import { publishOrganizationInvite } from '../events/publisher.js';
 
 export const getOrganization = asyncHandler(async (req, res) => {
-    const org = await Organization.findById(req.user.organizationId).populate('members.userId', 'fullName email role');
+    let org;
+    if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'ORG_ADMIN') {
+        org = await Organization.findOne(req.user.organizationId ? { _id: req.user.organizationId } : {}).populate('members.userId', 'fullName email role');
+    } else {
+        org = await Organization.findById(req.user.organizationId).populate('members.userId', 'fullName email role');
+    }
     
     if (!org) {
         throw new ApiError(404, 'Organization not found');
@@ -23,7 +28,12 @@ export const inviteMember = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Email is required');
     }
 
-    const org = await Organization.findById(req.user.organizationId);
+    let org;
+    if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'ORG_ADMIN') {
+        org = await Organization.findOne(req.user.organizationId ? { _id: req.user.organizationId } : {});
+    } else {
+        org = await Organization.findById(req.user.organizationId);
+    }
     if (!org) {
         throw new ApiError(404, 'Organization not found');
     }
@@ -73,7 +83,16 @@ export const updateMemberRole = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Member ID and role are required');
     }
 
-    const org = await Organization.findById(req.user.organizationId);
+    let org;
+    if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'ORG_ADMIN') {
+        org = await Organization.findOne(req.user.organizationId ? { _id: req.user.organizationId } : {});
+    } else {
+        org = await Organization.findById(req.user.organizationId);
+    }
+    
+    if (!org) {
+        throw new ApiError(404, 'Organization not found');
+    }
     
     // Find member in org array
     const memberIndex = org.members.findIndex(m => m.userId.toString() === memberId);

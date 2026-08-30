@@ -7,34 +7,30 @@ export const getAnalytics = async (req, res) => {
         // In a real multi-tenant app, we'd query by organizationId, 
         // but since meeting-service currently queries by hostId or attendee, we'll aggregate by user.
         
-        const totalMeetings = await Meeting.countDocuments({
-            $or: [
-                { hostId: userId },
-                { 'attendees.email': req.user.email }
-            ]
-        });
+        let queryCond = {};
+        if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'ORG_ADMIN') {
+            queryCond = {
+                $or: [
+                    { hostId: userId },
+                    { 'attendees.email': req.user.email }
+                ]
+            };
+        }
+        
+        const totalMeetings = await Meeting.countDocuments(queryCond);
 
         const completedMeetings = await Meeting.countDocuments({
-            $or: [
-                { hostId: userId },
-                { 'attendees.email': req.user.email }
-            ],
+            ...queryCond,
             status: 'Completed'
         });
 
         const upcomingMeetings = await Meeting.countDocuments({
-            $or: [
-                { hostId: userId },
-                { 'attendees.email': req.user.email }
-            ],
+            ...queryCond,
             status: 'Scheduled'
         });
 
         const meetingsWithSummaries = await Meeting.countDocuments({
-            $or: [
-                { hostId: userId },
-                { 'attendees.email': req.user.email }
-            ],
+            ...queryCond,
             aiSummary: { $ne: '' }
         });
 
